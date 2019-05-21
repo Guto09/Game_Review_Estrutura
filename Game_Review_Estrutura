@@ -1,0 +1,141 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Game_Review_Estrutura
+{
+
+    private static class Genero
+    {
+
+        private int countAnalises;
+        private Map< String, Integer> frasesPontuacao = new HashMap<>();
+        private List< Double> scores = new ArrayList<>();
+        private Double maiorPontuacao = null;
+        private Double menorPontuacao = null;
+        private String melhorJogo = null;
+        private String piorJogo = null;
+    }
+
+    public static void main(String[] args) throws IOException
+    {
+
+        Map< String, Genero> map = new HashMap<>();
+
+        String caminhoArquivo = "game-reviews.csv";
+
+        try
+        {
+            BufferedReader br = new BufferedReader(new FileReader(caminhoArquivo));
+
+            String linha = br.readLine();
+
+            while ((linha = br.readLine()) != null)
+            {
+                try
+                {
+                    String[] valores = linha.split(";");
+
+                    String jogo = valores[0];
+                    String frasePontuacao = valores[2];
+                    Double pontuacao = Double.parseDouble(valores[3]);
+                    String genero = valores[4];
+
+                    Genero resumo = map.get(genero);
+
+                    if (resumo == null)
+                    {
+                        resumo = new Genero();
+
+                        map.put(genero, resumo);
+                    }
+
+                    Integer countFrase = resumo.frasesPontuacao.get(frasePontuacao);
+
+                    if (countFrase == null)
+                    {
+                        countFrase = 0;
+                    }
+
+                    resumo.frasesPontuacao.put(frasePontuacao, countFrase + 1);
+
+                    resumo.countAnalises = resumo.countAnalises + 1;
+
+                    resumo.scores.add(pontuacao);
+
+                    if (resumo.maiorPontuacao == null || resumo.maiorPontuacao < pontuacao)
+                    {
+                        resumo.maiorPontuacao = pontuacao;
+                        resumo.melhorJogo = jogo;
+                    }
+
+                    if (resumo.menorPontuacao == null || resumo.menorPontuacao > pontuacao)
+                    {
+                        resumo.menorPontuacao = pontuacao;
+                        resumo.piorJogo = jogo;
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        for (Map.Entry< String, Genero> entry : map.entrySet())
+        {
+            try
+            {
+                Genero resumo = entry.getValue();
+
+                double total = 0.0;
+                double media = 0.0;
+                double porcentagemAmazing = 0.0;
+                double desvioPadrao = 0.0;
+
+                if (resumo.frasesPontuacao.containsKey("Amazing"))
+                {
+                    int countAmazing = resumo.frasesPontuacao.get("Amazing");
+
+                    porcentagemAmazing = ((double) countAmazing / (double) resumo.countAnalises) * 100.0;
+                }
+
+                for (Double score : resumo.scores)
+                {
+                    total += score;
+                }
+
+                media = (double) total / (double) resumo.countAnalises;
+
+                for (Double score : resumo.scores)
+                {
+                    desvioPadrao += Math.pow(score - media, 2);
+                }
+
+                desvioPadrao = Math.sqrt(desvioPadrao / resumo.countAnalises);
+
+                System.out.println("Gênero: " + entry.getKey());
+                System.out.println("Número de reviews: " + resumo.countAnalises);
+                System.out.printf("Percentual de 'amazing': %.2f%%\n", porcentagemAmazing);
+                System.out.printf("Média dos scores: %.2f\n", media);
+                System.out.printf("Desvio padrão: %.2f\n", desvioPadrao);
+                System.out.println("Melhor jogo: " + resumo.melhorJogo);
+                System.out.println("Pior jogo: " + resumo.piorJogo);
+                
+                System.out.println("\n--------------------------------------------------\n");
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+}
